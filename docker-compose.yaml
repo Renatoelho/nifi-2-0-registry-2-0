@@ -1,0 +1,71 @@
+
+services: 
+  apache-nifi:
+    # https://localhost:8443/nifi/#/login
+    environment:
+      - SINGLE_USER_CREDENTIALS_USERNAME=nifi
+      - SINGLE_USER_CREDENTIALS_PASSWORD=HGd15bvfv8744ghbdhgdv7895agqERAo
+      - TZ=America/Sao_Paulo
+    image: apache/nifi:2.0.0-M4
+    container_name: apache-nifi
+    ports:
+      - "8443:8443"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.95"
+          memory: 4G
+    restart: on-failure
+    volumes: 
+      - nifi-python:/opt/nifi/nifi-current/python_extensions
+      - nifi-conf:/opt/nifi/nifi-current/conf
+      - nifi-content:/opt/nifi/nifi-current/content_repository
+      - nifi-database:/opt/nifi/nifi-current/database_repository
+      - nifi-flowfile:/opt/nifi/nifi-current/flowfile_repository
+      - nifi-logs:/opt/nifi/nifi-current/logs
+      - nifi-nar:/opt/nifi/nifi-current/nar_extensions
+      - nifi-provenance:/opt/nifi/nifi-current/provenance_repository
+      - nifi-state:/opt/nifi/nifi-current/state
+    networks:
+      - nifi-network
+  nifi-registry:
+    # http://localhost:18080/nifi-registry/#/ (Acesso via navegador)
+    # http://nifi-registry:18080/nifi-registry/ (Acesso interno)
+    hostname: nifi-registry
+    image: apache/nifi-registry:2.0.0-M4
+    container_name: nifi-registry
+    ports:
+      - "18080:18080"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.95"
+          memory: 2G
+    restart: on-failure
+    environment:
+      - LOG_LEVEL=INFO
+      - TZ=America/Sao_Paulo
+    volumes:
+      - nifi-registry:/opt/nifi-registry/nifi-registry-current
+    networks:
+      - nifi-network
+
+volumes:
+    nifi-python:
+    nifi-conf:
+    nifi-content:
+    nifi-database:
+    nifi-flowfile:
+    nifi-logs:
+    nifi-nar:
+    nifi-provenance:
+    nifi-state:
+    nifi-registry:
+
+networks:
+  nifi-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.1.0/29 # Nessa faixa temos 6 IPs úteis
